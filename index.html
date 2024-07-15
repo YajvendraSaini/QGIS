@@ -116,13 +116,31 @@
 
         // Enable map interaction when not drawing
         map.on('draw:drawstart', function () {
-            map.dragging.disable();
+            // Temporarily disable the map's double-click zoom behavior
+            map.doubleClickZoom.disable();
         });
 
         // Re-enable map interaction after drawing
         map.on('draw:drawstop', function () {
-            map.dragging.enable();
+            map.doubleClickZoom.enable();
         });
+
+        // Custom map handling to allow panning while drawing
+        var enableMapInteraction = function () {
+            map.dragging.enable();
+            map.touchZoom.enable();
+            map.scrollWheelZoom.enable();
+        };
+
+        var disableMapInteraction = function () {
+            map.dragging.disable();
+            map.touchZoom.disable();
+            map.scrollWheelZoom.disable();
+        };
+
+        // Attach the custom handlers to the drawing events
+        map.on(L.Draw.Event.DRAWSTART, disableMapInteraction);
+        map.on(L.Draw.Event.DRAWSTOP, enableMapInteraction);
     </script>
 </body>
 </html>
