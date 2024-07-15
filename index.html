@@ -104,6 +104,8 @@
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
+        var selectedLayer = null; // Variable to store the selected polygon layer
+
         // Initialize the draw control and pass it the FeatureGroup of editable layers
         var drawControl = new L.Control.Draw({
             edit: {
@@ -123,7 +125,13 @@
         function removeCenterMarker(layer) {
             if (layer.marker) {
                 map.removeLayer(layer.marker);
+                layer.marker = null; // Clear the marker reference
             }
+        }
+
+        // Function to reset the color of a layer to the default
+        function resetLayerColor(layer) {
+            layer.setStyle({ color: '#3388ff' });
         }
 
         // Event when a new layer is created
@@ -134,6 +142,10 @@
 
             // Change color to light orange when the layer is selected
             layer.on('click', function () {
+                if (selectedLayer) {
+                    resetLayerColor(selectedLayer); // Reset previously selected layer color
+                }
+                selectedLayer = layer;
                 layer.setStyle({ color: 'orange' });
 
                 // Show GeoJSON data in a popup
@@ -144,12 +156,24 @@
                     .setContent('<pre>' + geojsonString + '</pre>');
                 layer.bindPopup(popup).openPopup();
             });
+
+            // Deselect the layer when popup is closed
+            layer.on('popupclose', function () {
+                if (selectedLayer === layer) {
+                    resetLayerColor(layer);
+                    selectedLayer = null;
+                }
+            });
         });
 
         // Event when layers are deleted
         map.on(L.Draw.Event.DELETED, function (event) {
             event.layers.eachLayer(function (layer) {
                 removeCenterMarker(layer);
+                if (selectedLayer && selectedLayer === layer) {
+                    selectedLayer = null; // Clear selectedLayer if it's deleted
+                }
+                drawnItems.removeLayer(layer);
             });
         });
 
